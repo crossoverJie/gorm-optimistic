@@ -1,0 +1,2 @@
+# gorm-optimistic
+optimistic lock
