@@ -4,7 +4,6 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"strconv"
-	"sync/atomic"
 	"time"
 )
 
@@ -42,7 +41,7 @@ func UpdateWithOptimistic(db *gorm.DB, model Lock, callBack func(model Lock) Loc
 		time.Sleep(100 * time.Millisecond)
 		db.First(model)
 		bizModel := callBack(model)
-		atomic.AddInt32(&currentRetryCount, 1)
+		currentRetryCount++
 		err := UpdateWithOptimistic(db, bizModel, callBack, retryCount, currentRetryCount)
 		if err != nil {
 			return err
