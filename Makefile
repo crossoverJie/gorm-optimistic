@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-RELEASE_VERSION = v0.0.2
+RELEASE_VERSION = v0.0.3
 
 git-tag:
 	git tag $(RELEASE_VERSION); \
