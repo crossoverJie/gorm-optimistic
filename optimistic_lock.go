@@ -1,7 +1,11 @@
 package gorm_optimistic
 
 import (
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
+	"strconv"
+	"sync/atomic"
+	"time"
 )
 
 type OptimisticLock interface {
@@ -12,18 +16,36 @@ type Version struct {
 	Version int64 `gorm:"column:version;default:0;NOT NULL" json:"version"` // version
 }
 
-func UpdateWithOptimistic(db *gorm.DB, model OptimisticLock, callBack func(model OptimisticLock) OptimisticLock) (err error) {
+type OverRetryError struct {
+	Msg string
+}
+
+func (e *OverRetryError) Error() string {
+	return e.Msg
+}
+func NewOverRetryError(msg string) *OverRetryError {
+	return &OverRetryError{msg}
+}
+
+var currentRetryCount int32
+
+func UpdateWithOptimistic(db *gorm.DB, model OptimisticLock, callBack func(model OptimisticLock) OptimisticLock, retryCount int32) (err error) {
+	if currentRetryCount > retryCount {
+		return errors.WithStack(NewOverRetryError("Maximum number of retries exceeded:" + strconv.Itoa(int(retryCount))))
+	}
 	currentVersion := model.GetVersion()
 	model.SetVersion(currentVersion + 1)
 	column := db.Model(model).Where("version", currentVersion).UpdateColumns(model)
 	affected := column.RowsAffected
 	if affected == 0 {
-		if callBack == nil {
+		if callBack == nil && retryCount == 0 {
 			return column.Error
 		}
+		time.Sleep(100 * time.Millisecond)
 		db.First(model)
 		bizModel := callBack(model)
-		err := UpdateWithOptimistic(db, bizModel, callBack)
+		atomic.AddInt32(&currentRetryCount, 1)
+		err := UpdateWithOptimistic(db, bizModel, callBack, retryCount)
 		if err != nil {
 			return err
 		}
