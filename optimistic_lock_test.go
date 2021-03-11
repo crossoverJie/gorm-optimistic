@@ -1,4 +1,4 @@
-package gorm_optimistic
+package optimistic
 
 import (
 	"fmt"
@@ -36,11 +36,11 @@ func BenchmarkUpdateWithOptimistic(b *testing.B) {
 		var out Optimistic
 		db.First(&out, Optimistic{Id: 1})
 		out.Amount = out.Amount + 10
-		err = UpdateWithOptimistic(db, &out, func(model OptimisticLock) OptimisticLock {
+		err = UpdateWithOptimistic(db, &out, func(model Lock) Lock {
 			bizModel := model.(*Optimistic)
 			bizModel.Amount = bizModel.Amount + 10
 			return bizModel
-		}, 3)
+		}, 5)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -89,7 +89,7 @@ func TestReflect(t *testing.T) {
 	testDB(db, &out)
 }
 
-func testDB(db *gorm.DB, model OptimisticLock) {
+func testDB(db *gorm.DB, model Lock) {
 	db.First(model)
 	v := reflect.ValueOf(model)
 	i := reflect.Indirect(v)

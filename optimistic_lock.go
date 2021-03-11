@@ -1,4 +1,4 @@
-package gorm_optimistic
+package optimistic
 
 import (
 	"github.com/pkg/errors"
@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-type OptimisticLock interface {
+type Lock interface {
 	SetVersion(version int64)
 	GetVersion() int64
 }
@@ -29,7 +29,7 @@ func NewOverRetryError(msg string) *OverRetryError {
 
 var currentRetryCount int32
 
-func UpdateWithOptimistic(db *gorm.DB, model OptimisticLock, callBack func(model OptimisticLock) OptimisticLock, retryCount int32) (err error) {
+func UpdateWithOptimistic(db *gorm.DB, model Lock, callBack func(model Lock) Lock, retryCount int32) (err error) {
 	if currentRetryCount > retryCount {
 		return errors.WithStack(NewOverRetryError("Maximum number of retries exceeded:" + strconv.Itoa(int(retryCount))))
 	}
