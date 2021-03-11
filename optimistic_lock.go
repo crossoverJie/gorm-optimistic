@@ -27,9 +27,7 @@ func NewOverRetryError(msg string) *OverRetryError {
 	return &OverRetryError{msg}
 }
 
-var currentRetryCount int32
-
-func UpdateWithOptimistic(db *gorm.DB, model Lock, callBack func(model Lock) Lock, retryCount int32) (err error) {
+func UpdateWithOptimistic(db *gorm.DB, model Lock, callBack func(model Lock) Lock, retryCount, currentRetryCount int32) (err error) {
 	if currentRetryCount > retryCount {
 		return errors.WithStack(NewOverRetryError("Maximum number of retries exceeded:" + strconv.Itoa(int(retryCount))))
 	}
@@ -45,7 +43,7 @@ func UpdateWithOptimistic(db *gorm.DB, model Lock, callBack func(model Lock) Loc
 		db.First(model)
 		bizModel := callBack(model)
 		atomic.AddInt32(&currentRetryCount, 1)
-		err := UpdateWithOptimistic(db, bizModel, callBack, retryCount)
+		err := UpdateWithOptimistic(db, bizModel, callBack, retryCount, currentRetryCount)
 		if err != nil {
 			return err
 		}

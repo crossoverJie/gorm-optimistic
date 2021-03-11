@@ -22,7 +22,7 @@ func TestUpdateWithOptimistic(t *testing.T) {
 	var out Optimistic
 	db.First(&out, Optimistic{Id: 1})
 	out.Amount = out.Amount + 10
-	err = UpdateWithOptimistic(db, &out, nil, 0)
+	err = UpdateWithOptimistic(db, &out, nil, 0, 0)
 }
 
 func BenchmarkUpdateWithOptimistic(b *testing.B) {
@@ -40,7 +40,7 @@ func BenchmarkUpdateWithOptimistic(b *testing.B) {
 			bizModel := model.(*Optimistic)
 			bizModel.Amount = bizModel.Amount + 10
 			return bizModel
-		}, 5)
+		}, 5, 0)
 		if err != nil {
 			fmt.Println(err)
 		}
