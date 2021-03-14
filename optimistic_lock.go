@@ -15,20 +15,20 @@ type Version struct {
 	Version int64 `gorm:"column:version;default:0;NOT NULL" json:"version"` // version
 }
 
-type OverRetryError struct {
+type Error struct {
 	Msg string
 }
 
-func (e *OverRetryError) Error() string {
+func (e *Error) Error() string {
 	return e.Msg
 }
-func NewOverRetryError(msg string) *OverRetryError {
-	return &OverRetryError{msg}
+func NewOptimisticError(msg string) *Error {
+	return &Error{msg}
 }
 
 func UpdateWithOptimistic(db *gorm.DB, model Lock, callBack func(model Lock) Lock, retryCount, currentRetryCount int32) (err error) {
 	if currentRetryCount > retryCount {
-		return errors.WithStack(NewOverRetryError("Maximum number of retries exceeded:" + strconv.Itoa(int(retryCount))))
+		return errors.WithStack(NewOptimisticError("Maximum number of retries exceeded:" + strconv.Itoa(int(retryCount))))
 	}
 	currentVersion := model.GetVersion()
 	model.SetVersion(currentVersion + 1)
@@ -36,7 +36,7 @@ func UpdateWithOptimistic(db *gorm.DB, model Lock, callBack func(model Lock) Loc
 	affected := column.RowsAffected
 	if affected == 0 {
 		if callBack == nil && retryCount == 0 {
-			return column.Error
+			return errors.WithStack(NewOptimisticError("Concurrent optimistic update error"))
 		}
 		time.Sleep(100 * time.Millisecond)
 		db.First(model)
