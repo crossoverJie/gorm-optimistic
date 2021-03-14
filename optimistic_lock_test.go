@@ -13,8 +13,16 @@ import (
 )
 
 func TestUpdateWithOptimistic(t *testing.T) {
+	newLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+		logger.Config{
+			SlowThreshold: time.Nanosecond, // 慢 SQL 阈值
+			LogLevel:      logger.Info,     // Log level
+			Colorful:      false,           // 禁用彩色打印
+		},
+	)
 	dsn := "root:abc123@/test?charset=utf8&parseTime=True&loc=Local"
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{Logger: newLogger})
 	if err != nil {
 		fmt.Println(err)
 		return
