@@ -1,6 +1,13 @@
 # Gorm optimistic lock
 This is an optimistic lock plugin based on [GORM](https://github.com/go-gorm/gorm).
 
+
+# Installation
+
+```go
+go get -u github.com/crossoverJie/gorm-optimistic
+```
+
 # Quick start
 
 ```go
