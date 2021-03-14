@@ -1,5 +1,5 @@
 # Gorm optimistic lock
-This is a optimistic lock plugin based on [GORM](https://github.com/go-gorm/gorm).
+This is an optimistic lock plugin based on [GORM](https://github.com/go-gorm/gorm).
 
 # Quick start
 
