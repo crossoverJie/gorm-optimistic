@@ -30,6 +30,9 @@ func UpdateWithOptimistic(db *gorm.DB, model Lock, callBack func(model Lock) Loc
 	if currentRetryCount > retryCount {
 		return errors.WithStack(NewOptimisticError("Maximum number of retries exceeded:" + strconv.Itoa(int(retryCount))))
 	}
+	if callBack == nil {
+		return errors.WithStack(NewOptimisticError("Callback must not be nil"))
+	}
 	currentVersion := model.GetVersion()
 	model.SetVersion(currentVersion + 1)
 	column := db.Model(model).Where("version", currentVersion).UpdateColumns(model)
