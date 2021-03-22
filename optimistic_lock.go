@@ -33,13 +33,19 @@ func UpdateWithOptimistic(db *gorm.DB, model Lock, callBack func(model Lock) Loc
 	currentVersion := model.GetVersion()
 	model.SetVersion(currentVersion + 1)
 	column := db.Model(model).Where("version", currentVersion).UpdateColumns(model)
+	if column.Error != nil {
+		return errors.WithStack(column.Error)
+	}
 	affected := column.RowsAffected
 	if affected == 0 {
 		if callBack == nil && retryCount == 0 {
 			return errors.WithStack(NewOptimisticError("Concurrent optimistic update error"))
 		}
 		time.Sleep(100 * time.Millisecond)
-		db.First(model)
+		first := db.First(model)
+		if first.Error != nil {
+			return errors.WithStack(first.Error)
+		}
 		bizModel := callBack(model)
 		currentRetryCount++
 		err := UpdateWithOptimistic(db, bizModel, callBack, retryCount, currentRetryCount)
@@ -47,6 +53,6 @@ func UpdateWithOptimistic(db *gorm.DB, model Lock, callBack func(model Lock) Loc
 			return err
 		}
 	}
-	return column.Error
+	return nil
 
 }

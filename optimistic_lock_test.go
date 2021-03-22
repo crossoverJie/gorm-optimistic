@@ -50,7 +50,7 @@ func BenchmarkUpdateWithOptimistic(b *testing.B) {
 			bizModel := model.(*Optimistic)
 			bizModel.Amount = bizModel.Amount + 10
 			return bizModel
-		}, 2, 0)
+		}, 3, 0)
 		if err != nil {
 			fmt.Printf("%+v \n", err)
 		}
