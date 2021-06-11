@@ -56,6 +56,23 @@ func BenchmarkUpdateWithOptimistic(b *testing.B) {
 		}
 	})
 }
+func BenchmarkUpdateWithOptimisticError(b *testing.B) {
+	dsn := "root:abc123@/test?charset=utf8&parseTime=True&loc=Local"
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	b.RunParallel(func(pb *testing.PB) {
+		var out Optimistic
+		db.First(&out, Optimistic{Id: 1})
+		out.Amount = out.Amount + 10
+		err = UpdateWithOptimistic(db, &out, nil, 3, 0)
+		if err != nil {
+			fmt.Printf("%+v \n", err)
+		}
+	})
+}
 
 type Optimistic struct {
 	Id      int64   `gorm:"column:id;primary_key;AUTO_INCREMENT" json:"id"`

@@ -41,7 +41,7 @@ func UpdateWithOptimistic(db *gorm.DB, model Lock, callBack func(model Lock) Loc
 	}
 	affected := column.RowsAffected
 	if affected == 0 {
-		if callBack == nil && retryCount == 0 {
+		if retryCount == 0 {
 			return errors.WithStack(NewOptimisticError("Concurrent optimistic update error"))
 		}
 		time.Sleep(100 * time.Millisecond)
